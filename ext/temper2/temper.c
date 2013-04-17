@@ -50,18 +50,31 @@
 
 #define INNER_SENSOR 0
 #define OUTER_SENSOR 1
+#define SENSOR_ERROR 255
 
 float get_inner_temp();
 float get_outer_temp();
 
 static VALUE read_outer_sensor(VALUE self)
 {
-	return rb_float_new(get_outer_temp());
+	float outer = get_outer_temp();
+	if (outer == SENSOR_ERROR)
+		rb_raise(rb_eRuntimeError, "can't read from sensor");
+	else
+		return rb_float_new(outer);
+	
+	return Qnil;
 }
 
 static VALUE read_inner_sensor(VALUE self)
 {
-	return rb_float_new(get_inner_temp());
+	float inner = get_inner_temp();
+	if (inner == SENSOR_ERROR)
+		rb_raise(rb_eRuntimeError, "can't read from sensor");
+	else
+		return rb_float_new(inner);
+	
+	return Qnil;
 }
 
 void Init_temper2(void)
@@ -84,8 +97,7 @@ TemperData* get_temper_data()
 
 	t = TemperCreateFromDeviceNumber(0, TEMPER_TIMEOUT, TEMPER_DEBUG);
 	if(!t) {
-		perror("TemperCreate");
-		exit(-1);
+		return NULL;
 	}
 
 	TemperSendCommand8(t, 0x01, 0x80, 0x33, 0x01, 0x00, 0x00, 0x00, 0x00);
@@ -108,7 +120,11 @@ TemperData* get_temper_data()
 float get_inner_temp()
 {
 	TemperData *t = get_temper_data();;
-        float temperature = t[INNER_SENSOR].value;
+    
+	if (t == NULL)
+		return SENSOR_ERROR;
+
+	float temperature = t[INNER_SENSOR].value;
 	
 	return temperature;
 }
@@ -117,7 +133,10 @@ float get_outer_temp()
 {
 	TemperData *t = get_temper_data();
 
-        float temperature = t[OUTER_SENSOR].value;
+	if (t == NULL)
+		return SENSOR_ERROR;
+
+    float temperature = t[OUTER_SENSOR].value;
 	return temperature;
 }
 
