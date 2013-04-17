@@ -48,12 +48,20 @@
 #define TEMPER_DEBUG 0
 #endif
 
+#define INNER_SENSOR 0
+#define OUTER_SENSOR 1
+
+float get_inner_temp();
+float get_outer_temp();
+
 static VALUE read_outer_sensor(VALUE self)
 {
+	return rb_float_new(get_outer_temp());
 }
 
 static VALUE read_inner_sensor(VALUE self)
 {
+	return rb_float_new(get_inner_temp());
 }
 
 void Init_temper2(void)
@@ -96,12 +104,17 @@ TemperData* get_temper_data()
 }
 
 
-int
-main(void)
+float get_inner_temp()
 {
 	TemperData (*t)[2] = get_temper_data();
 
-	printf ("%f\n", t[0]->value);
-	return 0;
+	return (float)t[INNER_SENSOR]->value;
+}
+
+float get_outer_temp()
+{
+	TemperData (*t)[2] = get_temper_data();
+
+	return (float)t[OUTER_SENSOR]->value;
 }
 
