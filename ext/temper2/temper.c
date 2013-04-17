@@ -57,87 +57,88 @@ float get_outer_temp();
 
 static VALUE read_outer_sensor(VALUE self)
 {
-	float outer = get_outer_temp();
-	if (outer == SENSOR_ERROR)
-		rb_raise(rb_eRuntimeError, "can't read from sensor");
-	else
-		return rb_float_new(outer);
-	
-	return Qnil;
+    float outer = get_outer_temp();
+    if (outer == SENSOR_ERROR)
+	rb_raise(rb_eRuntimeError, "can't read from sensor");
+    else
+	return rb_float_new(outer);
+
+    return Qnil;
 }
 
 static VALUE read_inner_sensor(VALUE self)
 {
-	float inner = get_inner_temp();
-	if (inner == SENSOR_ERROR)
-		rb_raise(rb_eRuntimeError, "can't read from sensor");
-	else
-		return rb_float_new(inner);
-	
-	return Qnil;
+    float inner = get_inner_temp();
+    if (inner == SENSOR_ERROR)
+	rb_raise(rb_eRuntimeError, "can't read from sensor");
+    else
+	return rb_float_new(inner);
+
+    return Qnil;
 }
 
 void Init_temper2(void)
 {
-	VALUE c = rb_define_class("Temper2", rb_cObject);
+    VALUE c = rb_define_class("Temper2", rb_cObject);
 
-	rb_define_singleton_method(c, "read_outer_sensor", read_outer_sensor, 0);
-	rb_define_singleton_method(c, "read_inner_sensor", read_inner_sensor, 0);
+    rb_define_singleton_method(c, "read_outer_sensor", read_outer_sensor,
+			       0);
+    rb_define_singleton_method(c, "read_inner_sensor", read_inner_sensor,
+			       0);
 }
 
-TemperData* get_temper_data()
+TemperData *get_temper_data()
 {
-	Temper *t;
-	int ret;
+    Temper *t;
+    int ret;
 
-	usb_set_debug(0);
-	usb_init();
-	usb_find_busses();
-	usb_find_devices();
+    usb_set_debug(0);
+    usb_init();
+    usb_find_busses();
+    usb_find_devices();
 
-	t = TemperCreateFromDeviceNumber(0, TEMPER_TIMEOUT, TEMPER_DEBUG);
-	if(!t) {
-		return NULL;
-	}
-
-	TemperSendCommand8(t, 0x01, 0x80, 0x33, 0x01, 0x00, 0x00, 0x00, 0x00);
-	if (0) {
-		unsigned char buf[8];
-		TemperInterruptRead(t, buf, sizeof(buf));
-	}
-	else {
-		TemperData temp[2];
-		TemperData *data = malloc(sizeof(TemperData) * 2);
-		const unsigned int count = sizeof(temp)/sizeof(TemperData);
-		ret = TemperGetData(t,data, count);
-		return data;
-	}
-
+    t = TemperCreateFromDeviceNumber(0, TEMPER_TIMEOUT, TEMPER_DEBUG);
+    if (!t) {
 	return NULL;
+    }
+
+    TemperSendCommand8(t, 0x01, 0x80, 0x33, 0x01, 0x00, 0x00, 0x00, 0x00);
+    if (0) {
+	unsigned char buf[8];
+	TemperInterruptRead(t, buf, sizeof(buf));
+    } else {
+	TemperData temp[2];
+	TemperData *data = malloc(sizeof(TemperData) * 2);
+	const unsigned int count = sizeof(temp) / sizeof(TemperData);
+	ret = TemperGetData(t, data, count);
+	return data;
+    }
+
+    return NULL;
 }
 
 
 float get_inner_temp()
 {
-	TemperData *t = get_temper_data();;
-    
-	if (t == NULL)
-		return SENSOR_ERROR;
+    TemperData *t = get_temper_data();;
 
-	float temperature = t[INNER_SENSOR].value;
-	
-	return temperature;
+    if (t == NULL)
+	return SENSOR_ERROR;
+
+    float temperature = t[INNER_SENSOR].value;
+    free(t);
+
+    return temperature;
 }
 
 float get_outer_temp()
 {
-	TemperData *t = get_temper_data();
+    TemperData *t = get_temper_data();
 
-	if (t == NULL)
-		return SENSOR_ERROR;
+    if (t == NULL)
+	return SENSOR_ERROR;
 
     float temperature = t[OUTER_SENSOR].value;
-	return temperature;
+    free(t);
+    return temperature;
 }
-
-
