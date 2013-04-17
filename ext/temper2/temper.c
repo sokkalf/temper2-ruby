@@ -94,8 +94,9 @@ TemperData* get_temper_data()
 		TemperInterruptRead(t, buf, sizeof(buf));
 	}
 	else {
-		TemperData data[2];
-		const unsigned int count = sizeof(data)/sizeof(TemperData);
+		TemperData temp[2];
+		TemperData *data = malloc(sizeof(TemperData) * 2);
+		const unsigned int count = sizeof(temp)/sizeof(TemperData);
 		ret = TemperGetData(t,data, count);
 		return data;
 	}
@@ -106,15 +107,18 @@ TemperData* get_temper_data()
 
 float get_inner_temp()
 {
-	TemperData (*t)[2] = get_temper_data();
-
-	return (float)t[INNER_SENSOR]->value;
+	TemperData *t = get_temper_data();;
+        float temperature = t[INNER_SENSOR].value;
+	
+	return temperature;
 }
 
 float get_outer_temp()
 {
-	TemperData (*t)[2] = get_temper_data();
+	TemperData *t = get_temper_data();
 
-	return (float)t[OUTER_SENSOR]->value;
+        float temperature = t[OUTER_SENSOR].value;
+	return temperature;
 }
+
 
