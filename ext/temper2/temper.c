@@ -111,8 +111,11 @@ TemperData *get_temper_data()
 	TemperData *data = malloc(sizeof(TemperData) * 2);
 	const unsigned int count = sizeof(temp) / sizeof(TemperData);
 	ret = TemperGetData(t, data, count);
+	TemperFree(t);
 	return data;
     }
+
+    TemperFree(t);
 
     return NULL;
 }
